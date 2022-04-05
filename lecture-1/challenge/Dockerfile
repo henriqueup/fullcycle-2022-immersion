@@ -1,16 +1,14 @@
 # syntax=docker/dockerfile:1
 
 FROM golang:1.16-alpine
-
-WORKDIR /app
-
+WORKDIR /build/
 COPY go.mod ./
 RUN go mod download
-
 COPY *.go ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o go-hello-world .
 
-RUN go build -o /docker-gs-ping
+FROM scratch
+WORKDIR /app/
+COPY --from=0 /build/go-hello-world ./
 
-EXPOSE 8080
-
-CMD [ "/docker-gs-ping" ]
+CMD [ "./go-hello-world" ]
